@@ -15,10 +15,8 @@ class Cube : public Object3D {
 public:
     std::vector<unsigned int> indices;
     unsigned int VAO, VBO, EBO, normalVBO;
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    glm::mat4 worldTransform;
 
-    Cube(const glm::mat4& transform) {
+    Cube() {
 
         vertices = {
 
@@ -39,18 +37,17 @@ public:
             3, 0, 4, 4, 7, 3,  // 左面
             1, 5, 6, 6, 2, 1   // 右面
         };
-        applyTransform(transform);
-        worldTransform = transform;
-
         initBuffers();
     }
-    void applyTransform(const glm::mat4& transform) {
+    void printTransformedVertices(const std::vector<float>& vertices) {
         for (size_t i = 0; i < vertices.size(); i += 3) {
-            glm::vec4 localPos(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);
-            glm::vec4 worldPos = transform * localPos;
-            vertices[i] = worldPos.x;
-            vertices[i + 1] = worldPos.y;
-            vertices[i + 2] = worldPos.z;
+            glm::vec4 vertex(vertices[i], vertices[i + 1], vertices[i + 2], 1.0f);  // 將頂點轉換為4D向量
+
+            // 打印變換後的頂點數據
+            std::cout << "Transformed Vertex: ("
+                << vertex.x << ", "
+                << vertex.y << ", "
+                << vertex.z << ")" << std::endl;
         }
     }
     void initBuffers() {
@@ -103,16 +100,15 @@ public:
 
         glBindVertexArray(0);
     }
-    
-
-    // 平移立方體的函數
-    
 
     void render(Shader& shader) {
         shader.setMat4("model", getWorldTransform());
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+        for (Object3D* child : children) {
+            child->render(shader);
+        }
     }
     void cleanup() {
         glDeleteVertexArrays(1, &VAO);

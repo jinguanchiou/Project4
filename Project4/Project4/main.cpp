@@ -74,17 +74,16 @@ int main()
     }
     glEnable(GL_DEPTH_TEST);
 
-    glm::mat4 transform = glm::mat4(1.0f);
-
     Shader ourShader("shader.vs", "shader.fs");
 
-    Cube parentCube(transform);
-    Cube childCube(transform);
+    Cube parentCube;
+    Cube childCube;
 
     parentCube.addChild(&childCube);
 
     parentCube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
     parentCube.scale(glm::vec3(1.2f, 0.5f, 0.2f));
+    parentCube.printTransformedVertices(parentCube.vertices);
 
     childCube.translate(glm::vec3(1.6f, 0.0f, 0.0f));
     childCube.scale(glm::vec3(1.0f, 0.4f, 0.2f));
@@ -104,8 +103,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ourShader.use();
-
-        ourShader.use();
         ourShader.setVec3("objectColor", 0.98f, 0.87f, 0.79f);
         ourShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         ourShader.setVec3("lightPos", lightPos);
@@ -118,11 +115,14 @@ int main()
         ourShader.setMat4("view", view);
 
         parentCube.render(ourShader);
-        parentCube.renderChildren(ourShader);
 
         
         parentCube.rotateAroundPoint(angle, glm::vec3(0.0f, 0.0f, 1.0f), parentCube.calculateCenterPoint());
-        childCube.rotateAroundPoint(angle, glm::vec3(1.0f, 0.0f, 0.0f), parentCube.calculateCenterPoint());
+        childCube.rotateAroundPoint(angle, glm::vec3(0.0f, 0.0f, 1.0f), parentCube.calculateCenterPoint());
+
+        std::cout << "calculateCenterPoint.X:" << parentCube.calculateCenterPoint().x << std::endl;
+        std::cout << "calculateCenterPoint.Y:" << parentCube.calculateCenterPoint().y << std::endl;
+        std::cout << "calculateCenterPoint.Z:" << parentCube.calculateCenterPoint().z << std::endl;
 
         glfwSwapBuffers(window);
         glfwPollEvents();

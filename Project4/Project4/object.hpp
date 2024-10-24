@@ -31,6 +31,7 @@ public:
         center /= (vertices.size() / 3);
         return center;
     }
+    
     void rotateAroundPoint(float angle, const glm::vec3& axis, const glm::vec3& centerPoint) {
         localTransform = glm::translate(localTransform, centerPoint);
         localTransform = glm::rotate(localTransform, glm::radians(angle), axis);
@@ -55,15 +56,6 @@ public:
 
     virtual void render(Shader& shader) = 0;
 
-    // 渲染物件
-    void renderChildren(Shader& shader) {
-        for (Object3D* child : children) {
-            child->render(shader);
-            child->renderChildren(shader);  // 遞迴渲染子物件
-        }
-    }
-
-    // 刪除緩衝區
     void cleanup() {
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
