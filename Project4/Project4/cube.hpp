@@ -6,6 +6,8 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -101,7 +103,9 @@ public:
         glBindVertexArray(0);
     }
 
-    void render(Shader& shader) {
+    void render(Shader& shader){
+        std::cout << glm::to_string(getWorldTransform()) << std::endl;
+
         shader.setMat4("model", getWorldTransform());
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

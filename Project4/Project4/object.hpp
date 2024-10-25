@@ -32,12 +32,12 @@ public:
         return center;
     }
     
-    void rotateAroundPoint(float angle, const glm::vec3& axis, const glm::vec3& centerPoint) {
-        localTransform = glm::translate(localTransform, centerPoint);
+    void rotateAroundPoint(float angle, const glm::vec3& axis) {
+        localTransform = glm::translate(localTransform, calculateCenterPoint());
         localTransform = glm::rotate(localTransform, glm::radians(angle), axis);
-        localTransform = glm::translate(localTransform, -centerPoint);
+        localTransform = glm::translate(localTransform, -calculateCenterPoint());
     }
-
+    
     void scale(const glm::vec3& scaleFactor) {
         glm::mat4 parentScaleFactor = glm::mat4(1.0f);
         if (parent) {

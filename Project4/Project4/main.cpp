@@ -24,6 +24,10 @@ float pitch = 0.0f;
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
+float r1 = 0.0f;
+float r2 = 0.0f;
+float lastRotationAngle1 = 0.0f;
+float lastRotationAngle2 = 0.0f;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -42,6 +46,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void RenderImGui();
 
 void initGLFW() {
     glfwInit();
@@ -67,6 +72,9 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -76,26 +84,34 @@ int main()
 
     Shader ourShader("shader.vs", "shader.fs");
 
-    Cube parentCube;
-    Cube childCube;
+    Cube arm;
+    Cube joint;
+    Cube frontArm;
+    
+    arm.addChild(&joint);
+    joint.addChild(&frontArm);
 
-    parentCube.addChild(&childCube);
+    arm.translate(glm::vec3(0.0f, 0.0f, 0.0f));
+    arm.scale(glm::vec3(1.2f, 0.5f, 0.2f));
 
-    parentCube.translate(glm::vec3(0.0f, 0.0f, 0.0f));
-    parentCube.scale(glm::vec3(1.2f, 0.5f, 0.2f));
-    parentCube.printTransformedVertices(parentCube.vertices);
+    joint.translate(glm::vec3(1.2f, 0.0f, 0.0f));
+    joint.scale(glm::vec3(0.6f, 0.25f, 0.1f));
 
-    childCube.translate(glm::vec3(1.6f, 0.0f, 0.0f));
-    childCube.scale(glm::vec3(1.0f, 0.4f, 0.2f));
+    frontArm.translate(glm::vec3(5.0f, 0.0f, 0.0f));
+    frontArm.scale(glm::vec3(1.0f, 0.4f, 0.2f));
 
     float angle = 0.0f;
     while (!glfwWindowShouldClose(window)) {
+        
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         angle = deltaTime * rotationSpeed;
 
         objectPosX += velocity * deltaTime;
+
+        processInput(window);
+        RenderImGui();
 
         processInput(window);
 
@@ -113,21 +129,26 @@ int main()
 
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         ourShader.setMat4("view", view);
-
-        parentCube.render(ourShader);
-
-        
-        parentCube.rotateAroundPoint(angle, glm::vec3(0.0f, 0.0f, 1.0f), parentCube.calculateCenterPoint());
-        childCube.rotateAroundPoint(angle, glm::vec3(0.0f, 0.0f, 1.0f), parentCube.calculateCenterPoint());
-
-        std::cout << "calculateCenterPoint.X:" << parentCube.calculateCenterPoint().x << std::endl;
-        std::cout << "calculateCenterPoint.Y:" << parentCube.calculateCenterPoint().y << std::endl;
-        std::cout << "calculateCenterPoint.Z:" << parentCube.calculateCenterPoint().z << std::endl;
+        arm.render(ourShader);
+        if (ImGui::SliderFloat("Cube Rotation1 Angle", &r1, 0.0f, 90.0f))
+        {
+            float deltaAngle = r1 - lastRotationAngle1;
+            arm.rotateAroundPoint(deltaAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+            lastRotationAngle1 = r1;
+        }
+        if (ImGui::SliderFloat("Cube Rotation2 Angle", &r2, 0.0f, 90.0f))
+        {
+            float deltaAngle = r2 - lastRotationAngle2;
+            joint.rotateAroundPoint(deltaAngle, glm::vec3(0.0f, 0.0f, 1.0f));
+            lastRotationAngle2 = r2;
+        }
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    
+    arm.cleanup();
     return 0;
 }
 void processInput(GLFWwindow* window)
@@ -206,4 +227,19 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+void RenderImGui()
+{
+    // 開始 ImGui 新的一個 frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // 開始創建一個窗口
+    ImGui::Begin("Control Panel");
+    ImGui::SliderFloat("r1", &r1, 0.0f, 90.0f);
+    ImGui::SliderFloat("r2", &r2, 0.0f, 90.0f);
+
+    // 結束窗口
+    ImGui::End();
 }
